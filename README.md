@@ -71,7 +71,7 @@ wss.on("connection", () => console.log("🧠 Cliente WebSocket conectado"));
 ```
 
 🤖 Código Arduino (ESP32 WT32-ETH01)
-```
+```c++
 #include <ETH.h>
 #include <WiFiUdp.h>
 
