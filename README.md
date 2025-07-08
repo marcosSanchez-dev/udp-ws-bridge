@@ -68,9 +68,10 @@ udpServer.bind(udpPort, () => {
 
 const wss = new WebSocket.Server({ port: 8080 });
 wss.on("connection", () => console.log("🧠 Cliente WebSocket conectado"));
-````
+```
 
 🤖 Código Arduino (ESP32 WT32-ETH01)
+```
 #include <ETH.h>
 #include <WiFiUdp.h>
 
@@ -104,6 +105,7 @@ void loop() {
   udp.endPacket();
   delay(2000);
 }
+```
 
 
 🌐 Uso Típico
