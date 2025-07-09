@@ -7,18 +7,31 @@ const udpPort = 4210;
 const udpServer = dgram.createSocket("udp4");
 
 udpServer.on("message", (msg, rinfo) => {
+  const mensaje = msg.toString().trim();
   console.log(
-    `📨 Mensaje UDP recibido: ${msg.toString()} de ${rinfo.address}:${
-      rinfo.port
-    }`
+    `📨 UDP recibido: "${mensaje}" de ${rinfo.address}:${rinfo.port}`
   );
 
-  // Reenvía por WebSocket a todos los clientes conectados
+  // Reenvía a cada cliente WebSocket conectado
+  let count = 0;
   wss.clients.forEach((client) => {
-    if (client.readyState === 1) {
-      client.send(msg.toString());
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(mensaje);
+      count++;
     }
   });
+
+  console.log(`📤 Reenviado por WebSocket a ${count} cliente(s)\n`);
+});
+
+// Agrega esto en server.js ANTES de udpServer.bind
+udpServer.on("listening", () => {
+  const address = udpServer.address();
+  console.log(`🔊 Escuchando en ${address.address}:${address.port}`);
+});
+
+udpServer.on("error", (err) => {
+  console.error(`❌ Error UDP: ${err.stack}`);
 });
 
 udpServer.bind(udpPort, () => {
