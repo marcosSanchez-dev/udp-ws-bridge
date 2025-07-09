@@ -40,6 +40,10 @@ udpServer.bind(udpPort, () => {
 
 // 2. Servidor WebSocket
 const wss = new WebSocket.Server({ port: 8080 });
+wss.on("error", (error) => {
+  console.error("❌ Error en servidor WebSocket:", error);
+});
+
 wss.on("connection", (ws) => {
   console.log("🧠 Cliente WebSocket conectado");
 });
