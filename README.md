@@ -70,7 +70,96 @@ const wss = new WebSocket.Server({ port: 8080 });
 wss.on("connection", () => console.log("🧠 Cliente WebSocket conectado"));
 ```
 
-🤖 Código Arduino (ESP32 WT32-ETH01)
+Código Arduino UDP (ESP32 WT32-ETH01)
+```c++
+#include <ETH.h>
+#include <WiFiUdp.h>
+
+WiFiUDP udp;
+IPAddress serverIp(192, 168, 68, 101); // IP de tu laptop
+const int udpPort = 4210;
+
+// Configuración CORREGIDA para WT32-ETH01
+#define ETH_PHY_ADDR       1
+#define ETH_PHY_TYPE       ETH_PHY_LAN8720
+#define ETH_PHY_MDC_PIN    23
+#define ETH_PHY_MDIO_PIN   18
+#define ETH_PHY_POWER      16   // Pin de control de energía (CORRECTO)
+#define ETH_CLOCK_MODE     ETH_CLOCK_GPIO17_OUT  // Modo de reloj CORRECTO
+
+void setup() {
+  Serial.begin(115200);
+  
+  // Configuración avanzada para el controlador Ethernet
+  ETH.begin(
+    ETH_PHY_TYPE,
+    ETH_PHY_ADDR,
+    ETH_PHY_MDC_PIN,
+    ETH_PHY_MDIO_PIN,
+    ETH_PHY_POWER,
+    ETH_CLOCK_MODE
+  );
+
+  Serial.println("Esperando conexión Ethernet...");
+  uint32_t timeout = millis() + 20000;  // Aumenta timeout a 20 segundos
+  
+  while (!ETH.linkUp()) {  // Verifica conexión física primero
+    if (millis() > timeout) {
+      Serial.println("❌ Fallo en conexión física (cable o router)");
+      return;
+    }
+    delay(500);
+    Serial.print(".");
+  }
+
+  timeout = millis() + 10000;
+  while (ETH.localIP() == IPAddress(0,0,0,0)) {
+    if (millis() > timeout) {
+      Serial.println("❌ Fallo al obtener IP (DHCP)");
+      return;
+    }
+    delay(500);
+    Serial.print("*");
+  }
+
+  Serial.println("\n✅ Conexión Ethernet establecida");
+  Serial.print("IP asignada: ");
+  Serial.println(ETH.localIP());
+  Serial.print("Velocidad: ");
+  Serial.print(ETH.linkSpeed());
+  Serial.println("Mbps");
+}
+
+void loop() {
+  if (ETH.localIP() != IPAddress(0,0,0,0)) {
+    const char* mensaje = "PLAYER1";
+    udp.beginPacket(serverIp, udpPort);
+    udp.write((const uint8_t*)mensaje, strlen(mensaje));
+    udp.endPacket();
+    Serial.println("📤 Enviado por UDP: PLAYER1");
+  }
+  delay(2000);
+}
+```
+
+
+
+
+🌐 Uso Típico
+1- Conecta tu ESP32 por Ethernet
+
+2- Ejecuta el servidor Node.js:
+
+
+node server.js
+Tu frontend web (o consola WebSocket) recibirá los mensajes desde el ESP32
+
+Instalación
+
+npm install
+node server.js
+
+Código Arduino TEST (ESP32 WT32-ETH01)
 ```c++
 #include <ETH.h>
 #include <WiFiUdp.h>
@@ -106,19 +195,3 @@ void loop() {
   delay(2000);
 }
 ```
-
-
-🌐 Uso Típico
-1- Conecta tu ESP32 por Ethernet
-
-2- Ejecuta el servidor Node.js:
-
-
-node server.js
-Tu frontend web (o consola WebSocket) recibirá los mensajes desde el ESP32
-
-Instalación
-
-npm install
-node server.js
-
